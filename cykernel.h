@@ -27,9 +27,11 @@
 
 #define MAX_TASK 10
 #define TASK_STACK_SIZE 2048
+#define MAX_PRIORITY 10
 
 typedef uint32_t    ID;
 typedef void (*FP)(void);
+typedef uint32_t PRIORITY;
 
 typedef enum {
     TASK_STATUS_NONE,
@@ -38,8 +40,12 @@ typedef enum {
 } TASK_STATUS;
 
 /* TCB */
-typedef struct {
+typedef struct st_tcb {
+    struct st_tcb *pre;
+    struct st_tcb *next;
+
     ID taskid;
+    PRIORITY task_priority;
     TASK_STATUS status;
     jmp_buf context;
     FP task;
@@ -48,6 +54,7 @@ typedef struct {
 /* タスク生成用 */
 typedef struct {
     FP task;
+    PRIORITY task_priority;
 } Type_Create_Task;
 
 
@@ -56,3 +63,5 @@ extern ID cy_create_task(Type_Create_Task *pk_create_task);
 extern void scheduler();
 extern void dispatch(jmp_buf from, jmp_buf to);
 extern void usermain(void);
+
+extern void tqueue_add_entry(TCB **queue, TCB *tcb);

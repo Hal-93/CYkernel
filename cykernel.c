@@ -6,6 +6,7 @@
 typedef void (*FP)(void);
 
 TCB tcb_table[MAX_TASK];
+TCB *ready_queue[MAX_PRIORITY];
 
 jmp_buf context_table[MAX_TASK];
 
@@ -41,29 +42,31 @@ TCB *current_task;
 
 void scheduler(void)
 {
-    uint32_t next;
+    TCB *next_tcb = NULL;
+    int i;
 
-    if(current_task != NULL){
-        next = current_task->taskid;
-        if(next>=MAX_TASK) next = 0;
-    } 
+    for(i = 0; i < MAX_PRIORITY; i++) {
+        if(ready_queue[i] != NULL) break;
+    }
+
+    if(i < MAX_PRIORITY) {
+        next_tcb = ready_queue[i];
+    }
     else {
-        next = 0;
+        while(1);
     }
-    while(tcb_table[next].status != TASK_STATUS_READY) {
-        if(++next >= MAX_TASK) next = 0;
+
+    if(current_task == NULL) {
+        current_task = next_tcb;
+        longjmp(next_tcb->context, 1);
     }
-    if(current_task == NULL){
-        current_task = &tcb_table[next];
-        longjmp(tcb_table[next].context, 1);
-    }
-    else if(next != current_task->taskid-1)
-    {
+    else if(next_tcb != current_task) {
         TCB *temp = current_task;
-        current_task = &tcb_table[next];
+        current_task = next_tcb;
         dispatch(temp->context, current_task->context);
     }
-}
+} 
+
 
 void ini_task(void)
 {
@@ -71,7 +74,8 @@ void ini_task(void)
 }
 
 Type_Create_Task initial_create_task = {
-    .task = ini_task
+    .task = ini_task,
+    .task_priority = 5
 };
 
 int main()
@@ -92,13 +96,21 @@ ID cy_create_task(Type_Create_Task *pk_create_task)
     uint32_t i;
 
     for(i = 0; i < MAX_TASK; i++) {
-        if(tcb_table[i].status == TASK_STATUS_NONE){
+        if(tcb_table[i].status == TASK_STATUS_NONE)
+        {
             tcb_table[i].taskid = (ID)(i+1);
             tcb_table[i].status = TASK_STATUS_READY;
             tcb_table[i].task = pk_create_task->task;
+            tcb_table[i].task_priority = pk_create_task->task_priority;
             break;
         }
     }
+    if(i < MAX_TASK) {
+        tqueue_add_entry(&ready_queue[pk_create_task->task_priority - 1], &tcb_table[i]);
+        return (ID)(i+1);
+    }
+    else {
+        return (ID)E_LIMIT_ERROR;
+    }
     return (i < MAX_TASK)?(ID)(i+1):(ID)E_LIMIT_ERROR;
 }
-
