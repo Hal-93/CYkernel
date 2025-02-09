@@ -6,7 +6,7 @@
 typedef void (*FP)(void);
 
 TCB tcb_table[MAX_TASK];
-TCB *ready_queue;
+TCB *ready_queue[MAX_PRIORITY];
 
 jmp_buf context_table[MAX_TASK];
 
@@ -42,18 +42,18 @@ TCB *current_task;
 
 void scheduler(void)
 {
-    TCB *next_tcb;
+    TCB *next_tcb = NULL;
+    int i;
 
-    if(current_task != NULL) {
-        next_tcb = current_task->next;
-        if(next_tcb == NULL)
-        {
-            next_tcb = ready_queue;
-        }
+    for(i = 0; i < MAX_PRIORITY; i++) {
+        if(ready_queue[i] != NULL) break;
+    }
+
+    if(i < MAX_PRIORITY) {
+        next_tcb = ready_queue[i];
     }
     else {
-        while(ready_queue == NULL);
-        next_tcb = ready_queue;
+        while(1);
     }
 
     if(current_task == NULL) {
@@ -74,7 +74,8 @@ void ini_task(void)
 }
 
 Type_Create_Task initial_create_task = {
-    .task = ini_task
+    .task = ini_task,
+    .task_priority = 5
 };
 
 int main()
@@ -100,11 +101,12 @@ ID cy_create_task(Type_Create_Task *pk_create_task)
             tcb_table[i].taskid = (ID)(i+1);
             tcb_table[i].status = TASK_STATUS_READY;
             tcb_table[i].task = pk_create_task->task;
+            tcb_table[i].task_priority = pk_create_task->task_priority;
             break;
         }
     }
     if(i < MAX_TASK) {
-        tqueue_add_entry(&ready_queue, &tcb_table[i]);
+        tqueue_add_entry(&ready_queue[pk_create_task->task_priority - 1], &tcb_table[i]);
         return (ID)(i+1);
     }
     else {

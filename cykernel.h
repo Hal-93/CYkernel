@@ -27,9 +27,11 @@
 
 #define MAX_TASK 10
 #define TASK_STACK_SIZE 2048
+#define MAX_PRIORITY 10
 
 typedef uint32_t    ID;
 typedef void (*FP)(void);
+typedef uint32_t PRIORITY;
 
 typedef enum {
     TASK_STATUS_NONE,
@@ -41,7 +43,9 @@ typedef enum {
 typedef struct st_tcb {
     struct st_tcb *pre;
     struct st_tcb *next;
+
     ID taskid;
+    PRIORITY task_priority;
     TASK_STATUS status;
     jmp_buf context;
     FP task;
@@ -50,6 +54,7 @@ typedef struct st_tcb {
 /* タスク生成用 */
 typedef struct {
     FP task;
+    PRIORITY task_priority;
 } Type_Create_Task;
 
 

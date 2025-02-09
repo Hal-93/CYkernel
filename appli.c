@@ -40,16 +40,20 @@ void task_4(void)
 }
 
 Type_Create_Task createtask_1 = {
-    .task = task_1
+    .task = task_1,
+    .task_priority = 3
 };
 Type_Create_Task createtask_2 = {
-    .task = task_2
+    .task = task_2,
+    .task_priority = 2
 };
 Type_Create_Task createtask_3 = {
-    .task = task_3
+    .task = task_3,
+    .task_priority = 3
 };
 Type_Create_Task createtask_4 = {
-    .task = task_4
+    .task = task_4,
+    .task_priority = 4
 };
 
 void usermain(void)
