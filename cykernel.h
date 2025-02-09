@@ -38,7 +38,9 @@ typedef enum {
 } TASK_STATUS;
 
 /* TCB */
-typedef struct {
+typedef struct st_tcb {
+    struct st_tcb *pre;
+    struct st_tcb *next;
     ID taskid;
     TASK_STATUS status;
     jmp_buf context;
@@ -56,3 +58,5 @@ extern ID cy_create_task(Type_Create_Task *pk_create_task);
 extern void scheduler();
 extern void dispatch(jmp_buf from, jmp_buf to);
 extern void usermain(void);
+
+extern void tqueue_add_entry(TCB **queue, TCB *tcb);
