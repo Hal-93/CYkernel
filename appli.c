@@ -7,7 +7,7 @@ void task_1(void)
 {
     while(1) {
         printf("task_1\n");
-        sleep(1);
+        cy_delay_task(500);
         scheduler();
     }
 }
@@ -16,7 +16,7 @@ void task_2(void)
 {
     while(1) {
         printf("task_2\n");
-        sleep(1);
+        cy_delay_task(500);
         scheduler();
     }
 }
@@ -25,7 +25,7 @@ void task_3(void)
 {
     while(1) {
         printf("task_3\n");
-        sleep(1);
+        cy_delay_task(500);
         scheduler();
     }
 }
@@ -34,7 +34,7 @@ void task_4(void)
 {
     while(1) {
         printf("task_4\n");
-        sleep(1);
+        cy_delay_task(500);
         scheduler();
     }
 }
@@ -65,7 +65,7 @@ void usermain(void)
     
     while(1){
         printf("usermain\n");
-        sleep(1);
+        cy_delay_task(500);
         scheduler();
     }
 }
