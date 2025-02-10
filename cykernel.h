@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <setjmp.h>
 
+
 #define E_OK                        (0)    // 正常終了 (Success)
 
 #define E_SYSTEM_ERROR              (-5)   // システムエラー (System Error)
@@ -28,16 +29,29 @@
 #define MAX_TASK 10
 #define TASK_STACK_SIZE 2048
 #define MAX_PRIORITY 10
+#define TIMER_PERIOD 10
+
+#define BEGIN_CRITICAL_SECTION disable_signal();
+#define END_CRITICAL_SECTION enable_signal();
 
 typedef uint32_t    ID;
 typedef void (*FP)(void);
 typedef uint32_t PRIORITY;
+typedef int32_t ERROR;
+typedef int32_t RELATIVE_TIME;
 
+/* ステータス */
 typedef enum {
     TASK_STATUS_NONE,
     TASK_STATUS_DORMANT,
-    TASK_STATUS_READY
+    TASK_STATUS_READY,
+    TASK_STATUS_WAIT
 } TASK_STATUS;
+
+typedef enum {
+    WAITFACT_NONE,
+    WAITFACT_DELAY
+} WAITFACT;
 
 /* TCB */
 typedef struct st_tcb {
@@ -49,6 +63,9 @@ typedef struct st_tcb {
     TASK_STATUS status;
     jmp_buf context;
     FP task;
+
+    WAITFACT waitfact;
+    RELATIVE_TIME waittime;
 } TCB;
 
 /* タスク生成用 */
@@ -60,8 +77,12 @@ typedef struct {
 
 /* 宣言 */
 extern ID cy_create_task(Type_Create_Task *pk_create_task);
+extern ERROR cy_delay_task(RELATIVE_TIME delaytime);
+
 extern void scheduler();
 extern void dispatch(jmp_buf from, jmp_buf to);
 extern void usermain(void);
 
-extern void tqueue_add_entry(TCB **queue, TCB *tcb);
+extern void queue_add_entry(TCB **queue, TCB *tcb);
+extern void queue_remove_top(TCB **queue);
+extern void queue_remove_entry(TCB **queue, TCB *tcb);

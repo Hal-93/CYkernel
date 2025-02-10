@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "cykernel.h"
 
-void tqueue_add_entry(TCB **queue, TCB *tcb)
+void queue_add_entry(TCB **queue, TCB *tcb)
 {
     TCB *queue_end;
 
@@ -18,4 +18,31 @@ void tqueue_add_entry(TCB **queue, TCB *tcb)
         (*queue)->pre = tcb;
     }
     tcb->next = NULL;
+}
+
+void queue_remove_top(TCB **queue)
+{
+    TCB	*top;
+
+    if(*queue == NULL) return;
+
+    top = *queue;
+    *queue = top->next;
+    if(*queue != NULL) {
+        (*queue)->pre = top->pre;
+    }
+}
+
+void queue_remove_entry(TCB **queue, TCB *tcb)
+{
+    if(*queue == tcb) {    
+        queue_remove_top(queue);
+    } else {
+        (tcb->pre)->next = tcb->next;
+        if(tcb->next != NULL) {
+            (tcb->next)->pre = tcb->pre;
+        } else {
+            (*queue)->pre = tcb->pre;
+        }
+    }
 }
