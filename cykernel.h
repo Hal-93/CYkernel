@@ -40,17 +40,22 @@ typedef uint32_t PRIORITY;
 typedef int32_t ERROR;
 typedef int32_t RELATIVE_TIME;
 
+typedef int32_t TIMEOUT;
+#define TIMEOUT_POLLING 0
+#define TIMEOUT_FOREVER (-1)
+
 /* ステータス */
 typedef enum {
     TASK_STATUS_NONE,
     TASK_STATUS_DORMANT,
     TASK_STATUS_READY,
-    TASK_STATUS_WAIT
+    TASK_STATUS_WAIT,
 } TASK_STATUS;
 
 typedef enum {
     WAITFACT_NONE,
-    WAITFACT_DELAY
+    WAITFACT_DELAY,
+    WAITFACT_SLEEP
 } WAITFACT;
 
 /* TCB */
@@ -66,6 +71,8 @@ typedef struct st_tcb {
 
     WAITFACT waitfact;
     RELATIVE_TIME waittime;
+
+    uint32_t wakeup_count;
 } TCB;
 
 /* タスク生成用 */
@@ -78,6 +85,8 @@ typedef struct {
 /* 宣言 */
 extern ID cy_create_task(Type_Create_Task *pk_create_task);
 extern ERROR cy_delay_task(RELATIVE_TIME delaytime);
+extern ERROR cy_sleep_task(TIMEOUT timeout);
+extern ERROR cy_wakeup_task(ID taskid);
 
 extern void scheduler();
 extern void dispatch(jmp_buf from, jmp_buf to);
@@ -86,3 +95,13 @@ extern void usermain(void);
 extern void queue_add_entry(TCB **queue, TCB *tcb);
 extern void queue_remove_top(TCB **queue);
 extern void queue_remove_entry(TCB **queue, TCB *tcb);
+
+extern void enable_signal(void);
+extern void disable_signal(void);
+
+TCB *ready_queue[MAX_PRIORITY];
+TCB *wait_queue;
+TCB tcb_table[MAX_TASK];
+
+TCB *current_task;
+TCB *next_task;

@@ -7,10 +7,6 @@
 
 typedef void (*FP)(void);
 
-TCB tcb_table[MAX_TASK];
-TCB *ready_queue[MAX_PRIORITY];
-TCB *wait_queue;
-
 jmp_buf context_table[MAX_TASK];
 
 void disable_signal(void)
@@ -57,8 +53,6 @@ void make_stack(int n)
 }
 
 
-TCB *current_task;
-TCB *next_task;
 int in_scheduler;
 
 void scheduler(void)
@@ -120,15 +114,17 @@ void hdr_systim(int signalno)
     while(tcb != NULL) {
         next = (TCB*)(tcb->next);
 
-        if(tcb->waittime > TIMER_PERIOD) {
-            tcb->waittime -= TIMER_PERIOD;
-        }
-        else {
-            queue_remove_entry(&wait_queue, tcb);
-            current_task->status = TASK_STATUS_READY;
-            current_task->waitfact = WAITFACT_NONE;
-            current_task->waittime = 0;
-            queue_add_entry(&ready_queue[tcb->task_priority - 1], tcb);
+        if (tcb->waittime != TIMEOUT_FOREVER){
+            if(tcb->waittime > TIMER_PERIOD) {
+                tcb->waittime -= TIMER_PERIOD;
+            }
+            else {
+                queue_remove_entry(&wait_queue, tcb);
+                current_task->status = TASK_STATUS_READY;
+                current_task->waitfact = WAITFACT_NONE;
+                current_task->waittime = 0;
+                queue_add_entry(&ready_queue[tcb->task_priority - 1], tcb);
+            }
         }
 
         tcb = next;
@@ -185,19 +181,4 @@ ID cy_create_task(Type_Create_Task *pk_create_task)
 
     END_CRITICAL_SECTION
     return return_code;
-}
-
-ERROR cy_delay_task(RELATIVE_TIME delaytime)
-{
-    BEGIN_CRITICAL_SECTION
-
-    queue_remove_entry(&ready_queue[current_task->task_priority - 1], current_task);
-    current_task->status = TASK_STATUS_WAIT;
-    current_task->waitfact = WAITFACT_DELAY;
-    current_task->waittime = delaytime;
-    queue_add_entry(&wait_queue, current_task);
-    scheduler();
-
-    END_CRITICAL_SECTION
-    return E_OK;
 }
